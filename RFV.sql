@@ -9,7 +9,7 @@ WITH TB_CLI_ATV AS
        , dtRfc as dtRfc
        , MAX(CAST(T.dtCriacao AS DATE)) dtUltima 
     FROM silver.points.transacoes AS T
-   WHERE CAST(dtCriacao AS DATE) BETWEEN DATEADD(DAY,-29,dtRfc) AND dtRfc
+   WHERE CAST(dtCriacao AS DATE) BETWEEN DATEADD(DAY,-29,dtRfc) AND DATEADD(DAY,-1,dtRfc)
    GROUP BY  T.idCliente
    )
 
@@ -18,9 +18,9 @@ SELECT
        B.dtRfc
      , A.idCliente
      , MAX(DATEDIFF(B.dtRfc,B.dtUltima)) QtdDiasUltTrans
-     , COUNT(DISTINCT CASE WHEN CAST(A.dtCriacao AS DATE) BETWEEN DATEADD(DAY,-29,dtRfc) AND dtRfc THEN CAST(A.dtCriacao AS DATE) 
+     , COUNT(DISTINCT CASE WHEN CAST(A.dtCriacao AS DATE) BETWEEN DATEADD(DAY,-29,dtRfc) AND DATEADD(DAY,-1,dtRfc) THEN CAST(A.dtCriacao AS DATE) 
                        END) QtdTransUlt28d
-     , SUM(CASE WHEN (CAST(A.dtCriacao AS DATE) BETWEEN DATEADD(DAY,-29,dtRfc) AND dtRfc) AND A.vlPontosTransacao >= 0 THEN A.vlPontosTransacao
+     , SUM(CASE WHEN (CAST(A.dtCriacao AS DATE) BETWEEN DATEADD(DAY,-29,dtRfc) AND DATEADD(DAY,-1,dtRfc)) AND A.vlPontosTransacao >= 0 THEN A.vlPontosTransacao
            ELSE 0
             END) QtPts
   FROM silver.points.transacoes A
