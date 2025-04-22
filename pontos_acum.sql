@@ -1,2 +1,5 @@
-SELECT * FROM silver.points.transacoes
-limit 10
+SELECT idCliente,
+       SUM(vlPontosTransacao) AS qtPontos
+FROM silver.points.transacoes
+WHERE dtCriacao < '{date}'
+GROUP BY ALL
