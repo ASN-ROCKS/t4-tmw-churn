@@ -57,7 +57,40 @@ tb_cliente_agrupado AS (
 
   FROM tb_transacoes
   GROUP BY ALL
+),
 
+tb_daily AS (
+
+  SELECT idCliente,
+        date(dtCriacao) AS dtDia,
+        (max(unix_timestamp(dtCriacao)) - min(unix_timestamp(dtCriacao))) / 60 + 1 AS qtMinutosAssistidos
+  FROM tb_transacoes
+  GROUP BY ALL
+),
+
+tb_horas_assistdas AS (
+
+    SELECT idCliente,
+          
+          sum(qtMinutosAssistidos) AS qtMinutosAssistidos,
+          sum(CASE WHEN dtDia >= date('2024-06-01') - INTERVAL 7 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidoD7,
+          sum(CASE WHEN dtDia >= date('2024-06-01') - INTERVAL 14 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD14,
+          sum(CASE WHEN dtDia >= date('2024-06-01') - INTERVAL 28 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD28,
+          sum(CASE WHEN dtDia >= date('2024-06-01') - INTERVAL 56 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD56,
+          
+          avg(qtMinutosAssistidos) AS avgMinutosAssistidos,
+          avg(CASE WHEN dtDia >= date('2024-06-01') - INTERVAL 7 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidoD7,
+          avg(CASE WHEN dtDia >= date('2024-06-01') - INTERVAL 14 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD14,
+          avg(CASE WHEN dtDia >= date('2024-06-01') - INTERVAL 28 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD28,
+          avg(CASE WHEN dtDia >= date('2024-06-01') - INTERVAL 56 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD56
+
+    FROM tb_daily
+    GROUP BY ALL
 )
 
-SELECT * FROM tb_cliente_agrupado
+SELECT t1.*,
+       t2.qtMinutosAssistidos
+
+FROM tb_cliente_agrupado AS t1
+LEFT JOIN tb_horas_assistdas AS t2
+ON t1.idCliente = t2.idCliente 
