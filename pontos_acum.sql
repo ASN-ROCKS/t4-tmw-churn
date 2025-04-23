@@ -6,10 +6,26 @@ WITH tb_transacoes AS (
 
 ),
 
-tb_saldo_pontos AS (
+tb_cliente_agrupado AS (
 
   SELECT idCliente,
+
+  count(distinct idTransacao) / count(distinct date(dtCriacao)) AS qtdTransacoesDia,
+
+  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 7 DAYS THEN idTransacao ELSE 0 END) /
+    count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 7 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD7,
+
+  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 14 DAYS THEN idTransacao ELSE 0 END) /
+    count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 14 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD14,
+
+  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 28 DAYS THEN idTransacao ELSE 0 END) /
+    count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 28 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD28,
+
+  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 56 DAYS THEN idTransacao ELSE 0 END) /
+    count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 56 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD56,
+
     sum(vlPontosTransacao) AS qtPontos,
+
     sum(CASE WHEN vlPontosTransacao > 0 THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPos,
     sum(CASE WHEN vlPontosTransacao < 0 THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNeg,
 
@@ -30,4 +46,4 @@ tb_saldo_pontos AS (
 
 )
 
-SELECT * FROM tb_saldo_pontos
+SELECT * FROM tb_cliente_agrupado
