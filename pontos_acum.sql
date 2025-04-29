@@ -146,7 +146,9 @@ tb_ifr AS (
           case when sum(case when qtdeTransacao - lagQtdeTransacao < 0 then abs(qtdeTransacao - lagQtdeTransacao) end) = 0
                   then 100 - 100 / (2 + sum(case when qtdeTransacao - lagQtdeTransacao > 0 then qtdeTransacao - lagQtdeTransacao end) / (1+sum(case when qtdeTransacao - lagQtdeTransacao < 0 then abs(qtdeTransacao - lagQtdeTransacao) end)))
               else 100 - 100 / (1 + sum(case when qtdeTransacao - lagQtdeTransacao > 0 then qtdeTransacao - lagQtdeTransacao end) / sum(case when qtdeTransacao - lagQtdeTransacao < 0 then abs(qtdeTransacao - lagQtdeTransacao) end))
-              end as ifr_plus1_case
+              end as ifr_plus1_case,
+
+          sum(qtdeTransacao - lagQtdeTransacao) AS ganho_liquido
 
   FROM tb_lag_d7
   WHERE lagQtdeTransacao IS NOT NULL
@@ -161,7 +163,8 @@ tb_final  AS (
         t2.qtMinutosAssistidos,
         t3.ifr_bruto as vlIFRBruto,
         t3.ifr_plus1 AS vlIFRPlus1,
-        t3.ifr_plus1_case AS vlIFRPlus1Case
+        t3.ifr_plus1_case AS vlIFRPlus1Case,
+        t3.ganho_liquido AS vlGanhoLiquido
 
   FROM tb_cliente_agrupado AS t1
   LEFT JOIN tb_horas_assistdas AS t2
