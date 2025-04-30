@@ -91,20 +91,20 @@ tb_horas_assistdas AS (
 
 tb_user AS (
 
-SELECT distinct idCliente
-FROM tb_transacoes
+  SELECT distinct idCliente
+  FROM tb_transacoes
 ),
 
 tb_calendar AS (
 
-SELECT DISTINCT date(dtCriacao)
-FROM tb_transacoes
+  SELECT DISTINCT date(dtCriacao)
+  FROM tb_transacoes
 
 ),
 
 tb_cross AS (
 
-SELECT * FROM tb_user, tb_calendar
+  SELECT * FROM tb_user, tb_calendar
 
 ),
 
@@ -157,6 +157,30 @@ tb_ifr AS (
 
 ),
 
+tb_lag_day AS (
+
+    SELECT *,
+          lag(dtDia) OVER (PARTITION BY idCliente ORDER BY dtDia) As lagDtDia
+
+    FROM tb_daily
+
+),
+
+tb_interval AS (
+
+SELECT idCliente,
+       avg(date_diff(dtDia, lagDtDia)) AS avgIntervalDays,
+       median(date_diff(dtDia, lagDtDia)) AS medianIntervalDays,
+       max(date_diff(dtDia, lagDtDia)) AS maxIntervalDays,
+       coalesce(std(date_diff(dtDia, lagDtDia)),0) AS stdIntervalDays,
+       sum(case when date_diff(dtDia, lagDtDia) > 28 then 1 else 0 end) AS qtdInterval28days
+
+FROM tb_lag_day
+WHERE lagDtDia IS NOT NULL
+GROUP BY ALL
+
+),
+
 tb_final  AS (
 
   SELECT t1.*,
@@ -164,7 +188,12 @@ tb_final  AS (
         t3.ifr_bruto as vlIFRBruto,
         t3.ifr_plus1 AS vlIFRPlus1,
         t3.ifr_plus1_case AS vlIFRPlus1Case,
-        t3.ganho_liquido AS vlGanhoLiquido
+        t3.ganho_liquido AS vlGanhoLiquido,
+        t4.avgIntervalDays,
+        t4.medianIntervalDays,
+        t4.maxIntervalDays,
+        t4.stdIntervalDays,
+        t4.qtdInterval28days
 
   FROM tb_cliente_agrupado AS t1
   LEFT JOIN tb_horas_assistdas AS t2
@@ -172,6 +201,29 @@ tb_final  AS (
 
   LEFT JOIN tb_ifr AS t3
   ON t1.idCliente = t3.idCliente
+
+  LEFT JOIN tb_interval AS t4
+  ON t1.idCliente = t4.idCliente
+
+),
+
+tb_densidade_sobrevivencia AS (
+
+  SELECT medianIntervalDays,
+        count(*) as densidade
+
+  FROM tb_interval
+
+  group by all
+  order by 1
+
+),
+
+tb_acum_sobrevivencia AS (
+
+  SELECT *,
+         sum(densidade) over (PARTITION BY 1 ORDER BY medianIntervalDays) / (select sum(densidade) from tb_densidade_sobrevivencia) As acumulada
+  FROM tb_densidade_sobrevivencia
 
 )
 
