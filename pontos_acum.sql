@@ -1,8 +1,19 @@
 WITH tb_transacoes AS (
 
-  SELECT *
-  FROM silver.points.transacoes
-  WHERE dtCriacao < '2024-06-01'
+  SELECT t1.*,
+          t2.idTransacaoProduto,
+          t2.idProduto,
+          t3.descNomeProduto
+
+  FROM silver.points.transacoes AS t1
+
+  LEFT JOIN silver.points.transacao_produto AS t2
+  ON t1.idTransacao = t2.idTransacao
+
+  LEFT JOIN silver.points.produtos AS t3
+  ON t2.idProduto = t3.idProduto
+
+  WHERE t1.dtCriacao < '2024-06-01'
 
 ),
 
@@ -15,6 +26,16 @@ tb_cliente_agrupado AS (
   count(distinct idTransacao) AS qtdTransacoes,
 
   count(distinct idTransacao) / count(distinct date(dtCriacao)) AS qtdTransacoesDia,
+
+  COUNT(DISTINCT CASE WHEN descNomeProduto = 'ChatMessage' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctChatMessage,
+  
+  COUNT(DISTINCT CASE WHEN descNomeProduto = 'Lista de presença' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctListaPresenca,
+  
+  COUNT(DISTINCT CASE WHEN descNomeProduto = 'Resgatar Ponei' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctResgatarPonei,
+  
+  COUNT(DISTINCT CASE WHEN descNomeProduto = 'Presença Streak' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctPresencaStreak,
+  
+  COUNT(DISTINCT CASE WHEN descNomeProduto = 'Troca de Pontos StreamElements' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctTrocaPontosStreamElements,
 
   COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 7 DAYS THEN idTransacao ELSE 0 END) /
     count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 7 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD7,
