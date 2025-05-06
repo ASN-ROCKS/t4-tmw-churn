@@ -22,34 +22,42 @@ tb_cliente_agrupado AS (
   SELECT idCliente,
 
   max(datediff(date('2024-06-01'), date(dtCriacao))) AS qtdIdadeDias,
+  min(datediff(date('2024-06-01'), date(dtCriacao))) AS QtdDiasUltTransacao,
 
   count(distinct idTransacao) AS qtdTransacoes,
 
   count(distinct idTransacao) / count(distinct date(dtCriacao)) AS qtdTransacoesDia,
 
+  sum(CASE WHEN dayofweek(dtCriacao) = 1 then 1 else 0 end) / count(distinct idTransacao) AS pctDia01,
+  sum(CASE WHEN dayofweek(dtCriacao) = 2 then 1 else 0 end) / count(distinct idTransacao) AS pctDia02,
+  sum(CASE WHEN dayofweek(dtCriacao) = 3 then 1 else 0 end) / count(distinct idTransacao) AS pctDia03,
+  sum(CASE WHEN dayofweek(dtCriacao) = 4 then 1 else 0 end) / count(distinct idTransacao) AS pctDia04,
+  sum(CASE WHEN dayofweek(dtCriacao) = 5 then 1 else 0 end) / count(distinct idTransacao) AS pctDia05,
+  sum(CASE WHEN dayofweek(dtCriacao) = 6 then 1 else 0 end) / count(distinct idTransacao) AS pctDia06,
+  sum(CASE WHEN dayofweek(dtCriacao) = 7 then 1 else 0 end) / count(distinct idTransacao) AS pctDia07,
+
+  SUM(CASE WHEN hour(dtCriacao) BETWEEN 6 AND 11 THEN 1 ELSE 0 END) / COUNT(DISTINCT idTransacao) AS pctManha,
+  SUM(CASE WHEN hour(dtCriacao) BETWEEN 12 AND 17 THEN 1 ELSE 0 END) / COUNT(DISTINCT idTransacao) AS pctTarde,
+  SUM(CASE WHEN hour(dtCriacao) BETWEEN 18 AND 23 THEN 1 ELSE 0 END) / COUNT(DISTINCT idTransacao) AS pctNoite,
+  SUM(CASE WHEN hour(dtCriacao) BETWEEN 0 AND 5 THEN 1 ELSE 0 END) / COUNT(DISTINCT idTransacao) AS pctMadrugada,
+
   COUNT(DISTINCT CASE WHEN descNomeProduto = 'ChatMessage' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctChatMessage,
-  
   COUNT(DISTINCT CASE WHEN descNomeProduto = 'Lista de presença' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctListaPresenca,
-  
   COUNT(DISTINCT CASE WHEN descNomeProduto = 'Resgatar Ponei' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctResgatarPonei,
-  
   COUNT(DISTINCT CASE WHEN descNomeProduto = 'Presença Streak' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctPresencaStreak,
-  
   COUNT(DISTINCT CASE WHEN descNomeProduto = 'Troca de Pontos StreamElements' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctTrocaPontosStreamElements,
 
   COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 7 DAYS THEN idTransacao ELSE 0 END) /
     count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 7 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD7,
-
   COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 14 DAYS THEN idTransacao ELSE 0 END) /
     count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 14 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD14,
-
   COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 28 DAYS THEN idTransacao ELSE 0 END) /
     count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 28 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD28,
-
   COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 56 DAYS THEN idTransacao ELSE 0 END) /
     count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 56 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD56,
 
     sum(vlPontosTransacao) AS qtPontos,
+    sum(abs(vlPontosTransacao)) AS qtPontosAbs,
 
     sum(CASE WHEN vlPontosTransacao > 0 THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPos,
     sum(CASE WHEN vlPontosTransacao < 0 THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNeg,
@@ -128,9 +136,7 @@ tb_calendar AS (
 ),
 
 tb_cross AS (
-
   SELECT * FROM tb_user, tb_calendar
-
 ),
 
 tb_dia_transacao_completa_d7 AS (
@@ -144,7 +150,6 @@ tb_dia_transacao_completa_d7 AS (
     AND t1.dtCriacao = t2.dtDia
 
     WHERE t1.dtCriacao >= date('2024-06-01') - INTERVAL 8 DAYS
-
     ORDER BY t1.idCliente, t1.dtCriacao
 ),
 
