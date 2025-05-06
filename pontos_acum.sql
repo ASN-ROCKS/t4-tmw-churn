@@ -10,6 +10,10 @@ tb_cliente_agrupado AS (
 
   SELECT idCliente,
 
+  max(datediff(date('2024-06-01'), date(dtCriacao))) AS qtdIdadeDias,
+
+  count(distinct idTransacao) AS qtdTransacoes,
+
   count(distinct idTransacao) / count(distinct date(dtCriacao)) AS qtdTransacoesDia,
 
   COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2024-06-01') - INTERVAL 7 DAYS THEN idTransacao ELSE 0 END) /
