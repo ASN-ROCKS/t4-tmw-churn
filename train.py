@@ -58,6 +58,12 @@ df_X_y.groupby("flagAtividade").median().T
 
 # COMMAND ----------
 
+# DBTITLE 1,MODIFY
+from sklearn import tree
+from sklearn import ensemble
+from sklearn import metrics
+from sklearn import pipeline
+
 # Para avgIntervalDays, medianIntervalDays, maxIntervalDays, stdIntervalDays, qtdInterval28days vamos colocar o máximo
 
 imputer_tail = imputation.EndTailImputer(variables=["avgIntervalDays",
@@ -66,25 +72,25 @@ imputer_tail = imputation.EndTailImputer(variables=["avgIntervalDays",
                                                     "stdIntervalDays",
                                                     "qtdInterval28days",], imputation_method='max')
 
-imputer_tail.fit(X_train, y_train)
+imputer_one = imputation.ArbitraryNumberImputer(variables=["vlIFRBruto",
+                                                           "vlIFRPlus1",
+                                                           "vlIFRPlus1Case",], arbitrary_number=1)
 
 # COMMAND ----------
 
-X_train_transform = imputer_tail.transform(X_train)
+# DBTITLE 1,MODEL
+model = ensemble.AdaBoostClassifier(random_state=42)
+
+model_pipeline = pipeline.Pipeline(steps=[('imputer_max', imputer_tail),
+                                          ('imputer_one', imputer_one),
+                                          ('classifier', model) ])
+
+model_pipeline.fit(X_train, y_train)
 
 # COMMAND ----------
 
-from sklearn import tree
-from sklearn import ensemble
-from sklearn import metrics
-
-# COMMAND ----------
-
-model = tree.DecisionTreeClassifier(random_state=42, min_weight_fraction_leaf=0.05)
-model.fit(X_train_transform, y_train)
-
-y_pred = model.predict(X_train_transform)
-y_proba = model.predict_proba(X_train_transform)[:,1]
+y_pred = model_pipeline.predict(X_train)
+y_proba = model_pipeline.predict_proba(X_train)[:,1]
 
 acc_treino = metrics.accuracy_score(y_train, y_pred)
 print("taxa de Acurácia em Treino", acc_treino)
@@ -94,9 +100,8 @@ print("taxa de AUC em Treino", auc_treino)
 
 # COMMAND ----------
 
-X_test_transform = imputer_tail.transform(X_test)
-pred_test = model.predict(X_test_transform)
-prob_test = model.predict_proba(X_test_transform)[:,1]
+pred_test = model_pipeline.predict(X_test)
+prob_test = model_pipeline.predict_proba(X_test)[:,1]
 
 acc_test = metrics.accuracy_score(y_test, pred_test)
 print("taxa de Acurácia em test", acc_test)
@@ -109,9 +114,8 @@ print("taxa de AUC em test", auc_test)
 
 # COMMAND ----------
 
-X_oot_transform = imputer_tail.transform(df_oot[features])
-pred_oot = model.predict(X_oot_transform)
-prob_oot = model.predict_proba(X_oot_transform)[:,1]
+pred_oot = model_pipeline.predict(df_oot[features])
+prob_oot = model_pipeline.predict_proba(df_oot[features])[:,1]
 
 acc_oot = metrics.accuracy_score(df_oot["flagAtividade"], pred_oot)
 print("taxa de Acurácia em oot", acc_oot)
@@ -124,4 +128,11 @@ print("taxa de AUC em oot", auc_oot)
 
 # COMMAND ----------
 
+import pandas as pd
 
+features_model = model_pipeline[:-1].transform(X_train.head(1)).columns.tolist()
+
+feature_importance = pd.Series(model_pipeline[-1].feature_importances_, index=features_model)
+feature_importance = feature_importance.sort_values(ascending=False).reset_index()
+feature_importance["acum"] = feature_importance[0].cumsum()
+feature_importance
