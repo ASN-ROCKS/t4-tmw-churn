@@ -22,6 +22,7 @@ tb_final AS (
     AND t1.dtRef + INTERVAL 28 DAYS < t2.dtAtivo
 
     WHERE  QtdDiasUltTransacao <= 84
+    AND t1.dtRef <= '2025-01-01'
 
     GROUP BY ALL
 )
