@@ -63,6 +63,8 @@ from sklearn import tree
 from sklearn import ensemble
 from sklearn import metrics
 from sklearn import pipeline
+from sklearn import naive_bayes
+from sklearn import model_selection
 
 # Para avgIntervalDays, medianIntervalDays, maxIntervalDays, stdIntervalDays, qtdInterval28days vamos colocar o máximo
 
@@ -81,9 +83,21 @@ imputer_one = imputation.ArbitraryNumberImputer(variables=["vlIFRBruto",
 # DBTITLE 1,MODEL
 model = ensemble.AdaBoostClassifier(random_state=42)
 
+params = {
+    "n_estimators": [200,500],
+    "learning_rate": [0.5, 0.7, 0.8, 0.85, 0.9],
+}
+
+grid = model_selection.GridSearchCV(estimator=model,
+                                    param_grid=params,
+                                    cv=3,
+                                    scoring='roc_auc',
+                                    n_jobs=2,
+                                    verbose=4)
+
 model_pipeline = pipeline.Pipeline(steps=[('imputer_max', imputer_tail),
                                           ('imputer_one', imputer_one),
-                                          ('classifier', model) ])
+                                          ('classifier', grid)])
 
 model_pipeline.fit(X_train, y_train)
 
@@ -112,6 +126,9 @@ print("taxa de Acurácia Balanceada em test", acc_bal_test)
 auc_test = metrics.roc_auc_score(y_test, prob_test)
 print("taxa de AUC em test", auc_test)
 
+# Luiz:   0.806154
+# Plinio: 0.806154
+
 # COMMAND ----------
 
 pred_oot = model_pipeline.predict(df_oot[features])
@@ -136,3 +153,7 @@ feature_importance = pd.Series(model_pipeline[-1].feature_importances_, index=fe
 feature_importance = feature_importance.sort_values(ascending=False).reset_index()
 feature_importance["acum"] = feature_importance[0].cumsum()
 feature_importance
+
+# COMMAND ----------
+
+pd.DataFrame(grid.cv_results_).sort_values("rank_test_score")
