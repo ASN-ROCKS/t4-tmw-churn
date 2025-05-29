@@ -34,3 +34,11 @@ for i in dates:
              .option("overwriteSchema", "true")
              .option("replaceWhere", f"dtRef = '{i}'")
              .saveAsTable("sandbox.asn.t4_points_churn_feature_store"))
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC SELECT dtRef, count(*) FROM sandbox.asn.t4_points_churn_feature_store
+# MAGIC group by ALL
+# MAGIC order by 1
