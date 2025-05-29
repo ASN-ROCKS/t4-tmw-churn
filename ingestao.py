@@ -17,7 +17,11 @@ def date_range(start, stop, monthly=False):
     return dates
 
 query = import_query("feature_store.sql")
-dates = date_range('2025-02-02', '2025-02-02', monthly=False)
+
+dt_start = dbutils.widgets.get("start")
+dt_stop = dbutils.widgets.get("stop")
+
+dates = date_range(dt_start, dt_stop, monthly=False)
 
 
 # COMMAND ----------
@@ -30,3 +34,11 @@ for i in dates:
              .option("overwriteSchema", "true")
              .option("replaceWhere", f"dtRef = '{i}'")
              .saveAsTable("sandbox.asn.t4_points_churn_feature_store"))
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC SELECT dtRef, count(*) FROM sandbox.asn.t4_points_churn_feature_store
+# MAGIC group by ALL
+# MAGIC order by 1

@@ -8,13 +8,36 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 import mlflow
+import datetime
+
+
+def date_range(start, stop, monthly=False):
+    dates = []
+    while start <= stop:
+        dates.append(start)
+        dt = datetime.datetime.strptime(start, '%Y-%m-%d') + datetime.timedelta(days=1)
+        start = dt.strftime("%Y-%m-%d")
+
+    if monthly:
+        dates = [i for i in dates if i.endswith("01")]
+    return dates
+
+dt_start = dbutils.widgets.get("start")
+dt_stop = dbutils.widgets.get("stop")
+
+dates = date_range(dt_start, dt_stop)
+
+dt_str = ",".join([f"'{i}'" for i in dates])
+
+
+# COMMAND ----------
 
 model = mlflow.sklearn.load_model("models:/t4-churn-tmw/production")
 model
 
 # COMMAND ----------
 
-query = """
+query = f"""
 WITH max_dt AS (
 
   SELECT max(dtRef) AS dtRef
@@ -24,7 +47,7 @@ WITH max_dt AS (
 
 SELECT *
 FROM sandbox.asn.t4_points_churn_feature_store
-WHERE dtRef = (SELECT dtRef FROM max_dt)
+WHERE dtRef IN ({dt_str})
 """
 
 data = spark.sql(query).toPandas()
@@ -50,7 +73,7 @@ sdf = spark.createDataFrame(df)
           .mode("overwrite")
           .partitionBy("dtRef")
           .option("overwriteSchema", "true")
-          .option("replaceWhere", f"dtRef = '{dt}'")
+          .option("replaceWhere", f"dtRef IN ({dt_str})")
           .saveAsTable("sandbox.asn.t4_points_churn_score"))
 
 # COMMAND ----------
