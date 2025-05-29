@@ -13,7 +13,7 @@ WITH tb_transacoes AS (
   LEFT JOIN silver.points.produtos AS t3
   ON t2.idProduto = t3.idProduto
 
-  WHERE t1.dtCriacao < '2025-01-01'
+  WHERE t1.dtCriacao < '{date}'
 
 ),
 
@@ -21,8 +21,8 @@ tb_cliente_agrupado AS (
 
   SELECT idCliente,
 
-  max(datediff(date('2025-01-01'), date(dtCriacao))) AS qtdIdadeDias,
-  min(datediff(date('2025-01-01'), date(dtCriacao))) AS QtdDiasUltTransacao,
+  max(datediff(date('{date}'), date(dtCriacao))) AS qtdIdadeDias,
+  min(datediff(date('{date}'), date(dtCriacao))) AS QtdDiasUltTransacao,
 
   count(distinct idTransacao) AS qtdTransacoes,
 
@@ -47,14 +47,14 @@ tb_cliente_agrupado AS (
   COUNT(DISTINCT CASE WHEN descNomeProduto = 'Presença Streak' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctPresencaStreak,
   COUNT(DISTINCT CASE WHEN descNomeProduto = 'Troca de Pontos StreamElements' THEN idTransacaoProduto END) / count(distinct idTransacaoProduto) AS pctTrocaPontosStreamElements,
 
-  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 7 DAYS THEN idTransacao ELSE 0 END) /
-    count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 7 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD7,
-  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 14 DAYS THEN idTransacao ELSE 0 END) /
-    count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 14 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD14,
-  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 28 DAYS THEN idTransacao ELSE 0 END) /
-    count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 28 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD28,
-  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 56 DAYS THEN idTransacao ELSE 0 END) /
-    count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 56 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD56,
+  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 7 DAYS THEN idTransacao ELSE 0 END) /
+    count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 7 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD7,
+  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 14 DAYS THEN idTransacao ELSE 0 END) /
+    count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 14 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD14,
+  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 28 DAYS THEN idTransacao ELSE 0 END) /
+    count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 28 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD28,
+  COALESCE(count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 56 DAYS THEN idTransacao ELSE 0 END) /
+    count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 56 DAYS THEN date(dtCriacao) END),0) AS qtdTransacaoDiaD56,
 
     sum(vlPontosTransacao) AS qtPontos,
     sum(abs(vlPontosTransacao)) AS qtPontosAbs,
@@ -62,31 +62,31 @@ tb_cliente_agrupado AS (
     sum(CASE WHEN vlPontosTransacao > 0 THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPos,
     sum(CASE WHEN vlPontosTransacao < 0 THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNeg,
 
-    sum(CASE WHEN vlPontosTransacao > 0 AND dtCriacao >= date('2025-01-01') - INTERVAL 7 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPosD7,
-    sum(CASE WHEN vlPontosTransacao < 0 AND dtCriacao >= date('2025-01-01') - INTERVAL 7 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNegD7,
+    sum(CASE WHEN vlPontosTransacao > 0 AND dtCriacao >= date('{date}') - INTERVAL 7 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPosD7,
+    sum(CASE WHEN vlPontosTransacao < 0 AND dtCriacao >= date('{date}') - INTERVAL 7 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNegD7,
 
-    sum(CASE WHEN vlPontosTransacao > 0 AND dtCriacao >= date('2025-01-01') - INTERVAL 14 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPosD14,
-    sum(CASE WHEN vlPontosTransacao < 0 AND dtCriacao >= date('2025-01-01') - INTERVAL 14 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNegD14,
+    sum(CASE WHEN vlPontosTransacao > 0 AND dtCriacao >= date('{date}') - INTERVAL 14 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPosD14,
+    sum(CASE WHEN vlPontosTransacao < 0 AND dtCriacao >= date('{date}') - INTERVAL 14 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNegD14,
 
-    sum(CASE WHEN vlPontosTransacao > 0 AND dtCriacao >= date('2025-01-01') - INTERVAL 28 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPosD28,
-    sum(CASE WHEN vlPontosTransacao < 0 AND dtCriacao >= date('2025-01-01') - INTERVAL 28 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNegD28,
+    sum(CASE WHEN vlPontosTransacao > 0 AND dtCriacao >= date('{date}') - INTERVAL 28 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPosD28,
+    sum(CASE WHEN vlPontosTransacao < 0 AND dtCriacao >= date('{date}') - INTERVAL 28 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNegD28,
 
-    sum(CASE WHEN vlPontosTransacao > 0 AND dtCriacao >= date('2025-01-01') - INTERVAL 56 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPosD56,
-    sum(CASE WHEN vlPontosTransacao < 0 AND dtCriacao >= date('2025-01-01') - INTERVAL 56 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNegD56,
+    sum(CASE WHEN vlPontosTransacao > 0 AND dtCriacao >= date('{date}') - INTERVAL 56 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosPosD56,
+    sum(CASE WHEN vlPontosTransacao < 0 AND dtCriacao >= date('{date}') - INTERVAL 56 DAYS THEN vlPontosTransacao ELSE 0 END ) AS vlPontosNegD56,
 
     sum(abs(vlPontosTransacao)) / count(distinct date(dtCriacao)) AS qtdPontosDia,
 
-    COALESCE(sum(CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 7 DAYS THEN abs(vlPontosTransacao) ELSE 0 END) /
-      count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 7 DAYS THEN date(dtCriacao) END),0) AS qtdPontosDiaD7,
+    COALESCE(sum(CASE WHEN dtCriacao >= date('{date}') - INTERVAL 7 DAYS THEN abs(vlPontosTransacao) ELSE 0 END) /
+      count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 7 DAYS THEN date(dtCriacao) END),0) AS qtdPontosDiaD7,
 
-    COALESCE(sum(CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 14 DAYS THEN abs(vlPontosTransacao) ELSE 0 END) /
-      count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 14 DAYS THEN date(dtCriacao) END),0) AS qtdPontosDiaD14,
+    COALESCE(sum(CASE WHEN dtCriacao >= date('{date}') - INTERVAL 14 DAYS THEN abs(vlPontosTransacao) ELSE 0 END) /
+      count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 14 DAYS THEN date(dtCriacao) END),0) AS qtdPontosDiaD14,
 
-    COALESCE(sum(CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 28 DAYS THEN abs(vlPontosTransacao) ELSE 0 END) /
-      count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 28 DAYS THEN date(dtCriacao) END),0) AS qtdPontosDiaD28,
+    COALESCE(sum(CASE WHEN dtCriacao >= date('{date}') - INTERVAL 28 DAYS THEN abs(vlPontosTransacao) ELSE 0 END) /
+      count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 28 DAYS THEN date(dtCriacao) END),0) AS qtdPontosDiaD28,
 
-    COALESCE(sum(CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 56 DAYS THEN abs(vlPontosTransacao) ELSE 0 END) /
-      count(DISTINCT CASE WHEN dtCriacao >= date('2025-01-01') - INTERVAL 56 DAYS THEN date(dtCriacao) END),0) AS qtdPontosDiaD56
+    COALESCE(sum(CASE WHEN dtCriacao >= date('{date}') - INTERVAL 56 DAYS THEN abs(vlPontosTransacao) ELSE 0 END) /
+      count(DISTINCT CASE WHEN dtCriacao >= date('{date}') - INTERVAL 56 DAYS THEN date(dtCriacao) END),0) AS qtdPontosDiaD56
 
   FROM tb_transacoes
   GROUP BY ALL
@@ -107,16 +107,16 @@ tb_horas_assistdas AS (
     SELECT idCliente,
           
           sum(qtMinutosAssistidos) AS qtMinutosAssistidos,
-          sum(CASE WHEN dtDia >= date('2025-01-01') - INTERVAL 7 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidoD7,
-          sum(CASE WHEN dtDia >= date('2025-01-01') - INTERVAL 14 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD14,
-          sum(CASE WHEN dtDia >= date('2025-01-01') - INTERVAL 28 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD28,
-          sum(CASE WHEN dtDia >= date('2025-01-01') - INTERVAL 56 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD56,
+          sum(CASE WHEN dtDia >= date('{date}') - INTERVAL 7 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidoD7,
+          sum(CASE WHEN dtDia >= date('{date}') - INTERVAL 14 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD14,
+          sum(CASE WHEN dtDia >= date('{date}') - INTERVAL 28 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD28,
+          sum(CASE WHEN dtDia >= date('{date}') - INTERVAL 56 DAYS THEN qtMinutosAssistidos ELSE 0 END) AS qtMinutosAssistidosD56,
           
           avg(qtMinutosAssistidos) AS avgMinutosAssistidos,
-          avg(CASE WHEN dtDia >= date('2025-01-01') - INTERVAL 7 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidoD7,
-          avg(CASE WHEN dtDia >= date('2025-01-01') - INTERVAL 14 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD14,
-          avg(CASE WHEN dtDia >= date('2025-01-01') - INTERVAL 28 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD28,
-          avg(CASE WHEN dtDia >= date('2025-01-01') - INTERVAL 56 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD56
+          avg(CASE WHEN dtDia >= date('{date}') - INTERVAL 7 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidoD7,
+          avg(CASE WHEN dtDia >= date('{date}') - INTERVAL 14 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD14,
+          avg(CASE WHEN dtDia >= date('{date}') - INTERVAL 28 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD28,
+          avg(CASE WHEN dtDia >= date('{date}') - INTERVAL 56 DAYS THEN qtMinutosAssistidos END) AS avgMinutosAssistidosD56
 
     FROM tb_daily
     GROUP BY ALL
@@ -149,7 +149,7 @@ tb_dia_transacao_completa_d7 AS (
     ON t1.idCliente = t2.idCliente
     AND t1.dtCriacao = t2.dtDia
 
-    WHERE t1.dtCriacao >= date('2025-01-01') - INTERVAL 8 DAYS
+    WHERE t1.dtCriacao >= date('{date}') - INTERVAL 8 DAYS
     ORDER BY t1.idCliente, t1.dtCriacao
 ),
 
@@ -257,6 +257,6 @@ tb_acum_sobrevivencia AS (
 
 )
 
-SELECT '2025-01-01' AS dtRef, 
+SELECT '{date}' AS dtRef, 
        *
 FROM tb_final
