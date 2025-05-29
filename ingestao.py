@@ -17,13 +17,12 @@ def date_range(start, stop, monthly=False):
     return dates
 
 query = import_query("feature_store.sql")
-dates = date_range('2024-03-01', '2025-02-01', monthly=True)
+dates = date_range('2025-02-02', '2025-02-02', monthly=False)
 
 
 # COMMAND ----------
 
 for i in dates:
-
     df = spark.sql(query.format(date=i))
     (df.write.format("delta")
              .mode("overwrite")
