@@ -17,7 +17,11 @@ def date_range(start, stop, monthly=False):
     return dates
 
 query = import_query("feature_store.sql")
-dates = date_range('2025-02-02', '2025-02-02', monthly=False)
+
+dt_start = dbutils.widgets.get("start")
+dt_stop = dbutils.widgets.get("stop")
+
+dates = date_range(dt_start, dt_stop, monthly=False)
 
 
 # COMMAND ----------
