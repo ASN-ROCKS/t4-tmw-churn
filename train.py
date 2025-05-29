@@ -68,36 +68,27 @@ from sklearn import model_selection
 
 # Para avgIntervalDays, medianIntervalDays, maxIntervalDays, stdIntervalDays, qtdInterval28days vamos colocar o máximo
 
-imputer_tail = imputation.EndTailImputer(variables=["avgIntervalDays",
-                                                    "medianIntervalDays",
-                                                    "maxIntervalDays",
-                                                    "stdIntervalDays",
-                                                    "qtdInterval28days",], imputation_method='max')
+imputer_tail_features =["avgIntervalDays","medianIntervalDays","maxIntervalDays","stdIntervalDays","qtdInterval28days",]
 
-imputer_one = imputation.ArbitraryNumberImputer(variables=["vlIFRBruto",
-                                                           "vlIFRPlus1",
-                                                           "vlIFRPlus1Case",], arbitrary_number=1)
+imputer_tail = imputation.EndTailImputer(variables=imputer_tail_features, imputation_method='max')
+
+imputer_one_features= ["vlIFRBruto","vlIFRPlus1","vlIFRPlus1Case",]
+
+imputer_one = imputation.ArbitraryNumberImputer(variables=imputer_one_features, arbitrary_number=1)
+
+imputer_zero_features = list(set(features) - set(imputer_tail_features) - set(imputer_one_features))
+
+imputer_zero = imputation.ArbitraryNumberImputer(variables=imputer_zero_features, arbitrary_number=0)
 
 # COMMAND ----------
 
 # DBTITLE 1,MODEL
-model = ensemble.RandomForestClassifier(random_state=42, n_jobs=1)
-
-params = {
-    "n_estimators": [100,200,350,500],
-    "min_samples_leaf":[10,50,100]
-}
-
-grid = model_selection.GridSearchCV(estimator=model,
-                                    param_grid=params,
-                                    cv=3,
-                                    scoring='roc_auc',
-                                    n_jobs=2,)
-
+model = ensemble.GradientBoostingClassifier(random_state=42, n_estimators=250)
 
 model_pipeline = pipeline.Pipeline(steps=[('imputer_max', imputer_tail),
                                           ('imputer_one', imputer_one),
-                                          ('classifier', grid)])
+                                          ('imputer_zero', imputer_zero),
+                                          ('classifier', model)])
 
 # Step 1: Importa o MLFlow
 import mlflow
@@ -156,7 +147,3 @@ feature_importance = pd.Series(model_pipeline[-1].feature_importances_, index=fe
 feature_importance = feature_importance.sort_values(ascending=False).reset_index()
 feature_importance["acum"] = feature_importance[0].cumsum()
 feature_importance
-
-# COMMAND ----------
-
-pd.DataFrame(grid.cv_results_).sort_values("rank_test_score")
